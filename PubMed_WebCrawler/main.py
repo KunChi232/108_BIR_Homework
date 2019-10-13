@@ -2,6 +2,7 @@ import requests
 import xml.etree.ElementTree as ET
 import re
 import sys, os
+import time
 class PubMedParser:
     path = 'PubmedArticle/MedlineCitation/Article'
     index = dict()
@@ -28,12 +29,11 @@ class PubMedParser:
             self.index[key] = temp
 
     def createIndex(self, string, num):
-        extract = re.findall(r'\w+', string, re.IGNORECASE)
+        extract = re.findall(r'\w+', string, re.IGNORECASE) 
         for word in extract:
             word = word.lower()
             if(word in self.index):
                 self.index[word].append(num)
-                self.index[word] = list(dict.fromkeys(self.index[word]))
             else:
                 self.index[word] = [num]
 
@@ -68,9 +68,6 @@ class PubMedParser:
                     numOfWords.append(words)
                     numOfCharacters.append(chars)
                     result.append(s)
-        print(len(result))
-        print(self.index['dengue'])
-        print(len(self.index['dengue']))
         return result, numOfWords, numOfCharacters
 
     def parsingTitle(self,allArticle):
@@ -108,16 +105,17 @@ class PubMedParser:
         return string
 
     def match(self,query):
-        # query_string = ''
-        # for q in query.split(' '):
-        #     query_string += '(' + q + ')|'
-        # query_string = query_string[:-1]
-        # titles = []
-        # contents = []
-        # label=[]
-        # authors = []
-        # numOfCharacters = []
-        # numOfWords = []
+        start_time = time.time()
+        query = query.split(' ')
+        query_string = ''
+        for q in query:
+            query_string += '(' + q + ')|'
+        query_string = query_string[:-1]
+        titles = []
+        contents = []
+        authors = []
+        numOfCharacters = []
+        numOfWords = []
         # for key, value in self.title_content_dictionary.items():
         #     titleIterator = re.finditer(query_string, str(key), re.IGNORECASE)
         #     contentIterator = re.finditer(query_string, value, re.IGNORECASE)
@@ -129,15 +127,30 @@ class PubMedParser:
         #         numOfCharacters.append(self.title_numOfCharacters_dictionary[key])
         #         contents.append(self.mark_content(queryPosInContent, value))
         #         authors.append(','.join(self.title_author_dictionary[key]))
-        
+        union = list()
+        for q in query:
+            union = list(set(union) | set(self.index[q]))
+        for i in union:
+            titleIterator = re.finditer(query_string, self.allTitles[i], re.IGNORECASE)
+            contentIterator = re.finditer(query_string, self.allContents[i], re.IGNORECASE)
+            queryPosInTitle = [(m.start(), m.end()) for m in titleIterator]
+            queryPosInContent = [(m.start(), m.end()) for m in contentIterator]
+            if(queryPosInTitle or queryPosInContent):
+                titles.append(self.allTitles[i])
+                numOfWords.append(self.numOfWords[i])
+                numOfCharacters.append(self.numOfCharacters[i])
+                contents.append(self.mark_content(queryPosInContent, self.allContents[i]))
+                authors.append(','.join(self.allAuthorName[i]))
         comm = []
         for i, content in enumerate(contents):
-            for j in range(len(query.split(' '))):
-                if(len(re.findall(query.split(' ')[j], content, re.IGNORECASE))):
-                    if(j+1 == len(query.split(' '))):
+            for j in range(len(query)):
+                if(len(re.findall(query[j], content, re.IGNORECASE))):
+                    if(j+1 == len(query)):
                         comm.append(i)
                 else:
                     break
+        end_time = time.time() - start_time
+        print(end_time)
         return titles, contents ,authors, numOfWords, numOfCharacters, comm
 
     def countNumOfWords(self,contents):
