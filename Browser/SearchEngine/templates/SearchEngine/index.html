@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html style="font-family: Georgia">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
+    <script>
+
+        function slideDownAnim(element){
+            var panel = element.nextElementSibling;
+            if (panel.style.maxHeight) {
+            panel.style.maxHeight = null;
+            } else {
+            panel.style.maxHeight=panel.scrollHeight+'px';
+            }
+        };
+        function readSingleFile(e) {
+            var file = e.files[0];
+            if (!file) {
+                return;
+            }
+            var reader = new FileReader();
+            var contents;
+            reader.onloadend = function(e) {
+                contents = e.target.result;
+                file_name = file.name;
+                $.ajax({
+                    type:'post',
+                    url:'upload',
+                    data:{
+                        file_name:file_name,
+                        contents:contents,
+                        csrfmiddlewaretoken:'{{ csrf_token }}',
+                        },
+
+                    success:function(e){
+                        alert(file_name + ' 上傳成功')
+                    }
+                })
+
+            };
+            reader.readAsText(file);
+        };
+        // function uploadFile(file_name, contents){
+        //     $.ajax({
+        //         type:"post",
+        //         url:'upload',
+        //         data:{
+        //             file_name=file_name,
+        //             contents=contents
+        //         },
+
+        //         success:function(e){
+        //             alert("successful")
+        //         },
+        //         error:function(xhr){
+        //             alert('error');
+        //         }  
+        //     })
+        // };
+
+        function PubMedSearch(){
+            $.ajax({
+                type:"get",
+                url:"PubMed",
+                data:{
+                    query:document.getElementsByName('input')[0].value
+                },
+            
+                success:function(data){
+                    var numOfSearching = data['titles'].length;
+                    var numOfComm = data['comm'].length;
+                    document.getElementById('resultDisplay').style.display='block';
+                    document.getElementById('comm').style.display="none"
+                    $("#numOfSearching").text(numOfSearching);
+                    if(document.getElementsByName('input')[0].value.split(" ").length > 1){
+                        document.getElementById('comm').style.display="block";
+                        $("#key").text(document.getElementsByName('input')[0].value+"的文章 : ");
+                        var s=''
+                        for(var i=0;i<numOfComm;i++){
+                            s+= data['comm'][i]+1+" ";
+                        }
+                        $("#numOfComm").text(s);
+                    };
+                    $('.bg').empty();
+                    var list=''
+                    for(var i=0;i<numOfSearching;i++){
+                        list+='<div id=serial>'+(i+1)+'.</div>'
+                            +'<div id=article>'
+                                +'<button class=accordion onclick="slideDownAnim(this)">'+data['titles'][i]+'</button>'
+                                +'<div class=panel>'
+                                    +'<div id=author>'+data['authors'][i]+'</div>'
+                                    +'<div id=content>'+data['contents'][i]+'</div>'
+                                    +'<div id=statistics>摘要字數 : '+data['numOfWords'][i]+" 字元數 : "+data['numOfChars'][i]+' 句子數 : '+data['numOfSentence'][i]+'</div>'
+                                +'</div>'
+                            +'</div><br>';
+                    } 
+                    $('.bg').append(list)
+                },
+                error:function(xhr){
+                    alert('error');
+                }        
+            });
+        };
+
+        function TwitterSearch(){
+            $.ajax({
+                type:"get",
+                url:"Twitter",
+                data:{
+                    query:document.getElementsByName('input')[0].value
+                },
+            
+                success:function(data){
+                    document.getElementById('comm').style.display="none"
+                    var numOfSearching = data['texts'].length;
+                    $("#numOfSearching").text(numOfSearching);
+                    $('.bg').empty();
+                    var list='' 
+                    for(var i=0;i<numOfSearching;i++){
+                        list+='<div id=tweet>'
+                                +'<table>'
+                                    +'<tr>'
+                                    +'<td rowspan="2"><img src=../../static/img/twitter_icon.png width=50 height=50 ></img></td>'
+                                    +'<td><div style="font-size:30px;font-weight:bold; vertical-align:bottom;">'+data['user_names'][i]+'</div></td>'
+                                    +'</tr>'
+                                    +'<tr><td style="color:#6a7881">'+data['screen_names'][i]+'</td></tr>'
+                                +'</table>'
+                                +'<div id=text >'+data['texts'][i]+'</div>'
+                                +'<footer id=created_at>'+data['created_ats'][i]+'</footer>'
+                                +'<div style="text-align:right">Tweet字數 : '+data['numOfWords'][i]+" 字元數 : "+data['numOfChars'][i]+'</div>'
+                            +'</div><br>';
+                    
+                    }
+                    $('.bg').append(list)
+                },
+                error:function(xhr){
+                    alert('error');
+                }        
+            });
+        };
+
+        function search(){
+            if($('#selector').val() == 'PubMed'){
+                PubMedSearch();
+            } else {
+                TwitterSearch();
+            }
+            
+        }
+    </script>
+    <style type="text/css">
+        #serial{
+            font-size: 30px;
+        }
+
+        #bg{
+            margin-left:120px;
+            margin-right:120px;
+        }
+        .accordion{
+            text-align: center;
+            padding: 3px;
+            font-size: 35px;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            background-color:#578AFA;
+            border:none;
+            outline: none;
+            width: 95%;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 10px 0 rgba(0, 0, 0, 0.1);
+
+            /* background-color: #f2f2f2; */
+        }
+        .panel{
+            width: 95%;
+            margin: auto;
+            max-height: 0;
+            overflow: hidden;
+            transition: 0.2s ease-out;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+            background-color: white;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+
+        }
+        .active, .accordion:hover{
+            background-color: #145FFF;
+        }
+        #content{
+            text-align: left;
+            font-size: 30px;
+            border-radius: 15px;
+            padding: 15px;
+            font-style: italic;
+        }
+        #article{
+            /* border-bottom: solid 1px; */
+            text-align: center;
+        }
+        #author{
+            margin-top: 20px;
+            padding: 5px;
+            text-align: center;
+            color: #248f24;
+        }
+        #btnSearch{
+            position: relative;
+            left: -6px;
+            top: 1px;
+            border-style: none;
+            background-color: #333333;
+            color: aliceblue;
+            font-size: 18px;
+            height: 34px;
+            padding-left: 18px;
+            padding-right: 18px;
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+        
+        }
+        #statistics{
+            margin-bottom: 15px;
+            margin-right: 15px;
+            text-align:right;
+        }
+        #selectContainer{
+            position: relative;
+            left: -3px;
+            background-color: #DBDBDB;
+            width: 100px;
+            height: 20px;
+            padding: 7px;
+            display: inline-block;
+        }
+        #username{
+            font-size: 20px;
+            font-weight: bold;
+            margin-left: 55px;
+            text-align: justify;
+        }
+        #text{
+            position: relative;
+            text-align: left;
+            font-size: 30px;
+            margin-right: 500px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        #tweet{
+            border-bottom: solid 1px;
+
+        }
+        #created_at{
+            font-weight: bold;
+            color:#6a7881;
+            margin-bottom: 10px;
+        }
+        #file-input{
+            display: none;
+        }
+        #btn-upload{
+            text-align: center;
+            font-size: 10px;
+            display: inline-block;
+            margin-top: 10px;
+            cursor: pointer;
+            background: #333333;
+            color: #F5F5F5;
+            padding: 8px;
+            border-radius: 5px;
+        }
+    </style>
+    <head>
+        <link href='https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css' rel='stylesheet'></link>
+    </head>
+    <body style="background-color: #F5F5F5">
+        <div style="text-align: center" class=title>
+            <h1 style="font-size: 50px">My Browser</h1>
+            <table style="margin-left:auto; margin-right:auto">
+                <tr>
+                    <td>
+                        <input style="height:30px;border-top-left-radius: 5px; padding-left: 10px; padding-right: 10px;border-bottom-left-radius: 5px;border-style:solid; border-width: 1px" type="text" name="input" size=100>
+                    </td>
+                    <td>
+                        <span id=selectContainer >
+                            <select id='selector'>
+                                <option value="PubMed">PubMed</option>
+                                <option value="Twitter">Twitter</option>
+                            </select>
+                        </span>
+                    </td>
+                    <td>
+                        <input id=btnSearch type="button" onclick="search()" value="Search">
+                    </td>
+                </tr>
+            </table>
+            <label id=btn-upload>
+                <input id="file-input" type="file" value="Upload" onchange="readSingleFile(this)">
+                <i class="fa fa-arrow-up">上傳檔案</i>
+            </label>
+            <h3 id=resultDisplay style="display: none">共有<var id=numOfSearching >XXX</var>項結果</h3>
+            <h3 id=comm style="display: none">同時擁有<var id=key>xxxx</var> <var id=numOfComm>XXX</var></h3>
+        </div>
+        <br>
+        <hr color="#DBDBDB">
+
+        <div class="bg" id=bg>
+
+        </div>
+
+    </body>
+</html>
