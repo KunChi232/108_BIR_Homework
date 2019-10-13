@@ -116,20 +116,14 @@ class PubMedParser:
         authors = []
         numOfCharacters = []
         numOfWords = []
-        # for key, value in self.title_content_dictionary.items():
-        #     titleIterator = re.finditer(query_string, str(key), re.IGNORECASE)
-        #     contentIterator = re.finditer(query_string, value, re.IGNORECASE)
-        #     queryPosInTitle = [(m.start(), m.end()) for m in titleIterator]
-        #     queryPosInContent = [(m.start(), m.end()) for m in contentIterator]
-        #     if(queryPosInTitle or queryPosInContent):
-        #         titles.append(key)
-        #         numOfWords.append(self.title_numOfWords_dictionary[key])
-        #         numOfCharacters.append(self.title_numOfCharacters_dictionary[key])
-        #         contents.append(self.mark_content(queryPosInContent, value))
-        #         authors.append(','.join(self.title_author_dictionary[key]))
+        allWordsTimes = dict()
+
         union = list()
         for q in query:
-            union = list(set(union) | set(self.index[q]))
+            try:
+                union = list(set(union) | set(self.index[q.lower()]))
+            except KeyError as e:
+                print(e)
         for i in union:
             titleIterator = re.finditer(query_string, self.allTitles[i], re.IGNORECASE)
             contentIterator = re.finditer(query_string, self.allContents[i], re.IGNORECASE)
@@ -139,8 +133,10 @@ class PubMedParser:
                 titles.append(self.allTitles[i])
                 numOfWords.append(self.numOfWords[i])
                 numOfCharacters.append(self.numOfCharacters[i])
+                allWordsTimes = self.countAllWordsTimes(self.allContents[i], allWordsTimes)
                 contents.append(self.mark_content(queryPosInContent, self.allContents[i]))
                 authors.append(','.join(self.allAuthorName[i]))
+
         comm = []
         for i, content in enumerate(contents):
             for j in range(len(query)):
@@ -151,20 +147,21 @@ class PubMedParser:
                     break
         end_time = time.time() - start_time
         print(end_time)
-        return titles, contents ,authors, numOfWords, numOfCharacters, comm
+        print(allWordsTimes)
+        return titles, contents ,authors, numOfWords, numOfCharacters, comm, 
 
-    def countNumOfWords(self,contents):
-        numOfWords = []
-        for content in contents:
-            numOfWords.append(len(re.findall(wordPattern, content)))
-        return numOfWords
-
-    def countNumOfCharacters(self,contents):
-        numOfCharacters = []
-        for content in contents:
-            numOfCharacters.append(len(re.findall(characterPattern, content)))
-        return numOfCharacters
-
+    def countAllWordsTimes(self, content, allWordsTimes):
+        tags = ['<br>', '</br>', '&nbsp', '<b>', '</b>']
+        for tag in tags:
+            content = content.replace(tag, '')
+        extract = re.findall(r'\w+', str(content))
+        for word in extract:
+            word = word.lower()
+            if(word in allWordsTimes):
+                allWordsTimes[word] = allWordsTimes[word]+1
+            else:
+                allWordsTimes[word] = 1
+        return allWordsTimes
     class color:
         RED_START = '<font color=red>'
         BULE_START = '<font color=blue>'
