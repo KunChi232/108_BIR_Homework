@@ -4,22 +4,38 @@ import re
 import sys, os
 class PubMedParser:
     path = 'PubmedArticle/MedlineCitation/Article'
-
+    index = dict()
     def __init__(self, fileContent):
         self.tree = ET.fromstring(fileContent)
         self.allArticle = self.getAllArticle(self.tree)
         self.allTitles = self.parsingTitle(self.allArticle)
         self.allContents, self.numOfWords, self.numOfCharacters = self.parsingContent(self.allArticle)
         self.allAuthorName = self.parsingAuthors(self.allArticle)
-        self.title_content_dictionary  = dict(zip(self.allTitles, self.allContents))
-        self.title_author_dictionary = dict(zip(self.allTitles, self.allAuthorName))
-        self.title_numOfWords_dictionary = dict(zip(self.allTitles, self.numOfWords))
-        self.title_numOfCharacters_dictionary = dict(zip(self.allTitles, self.numOfCharacters))
-
-
+        # self.title_content_dictionary  = dict(zip(self.allTitles, self.allContents))
+        # self.title_author_dictionary = dict(zip(self.allTitles, self.allAuthorName))
+        # self.title_numOfWords_dictionary = dict(zip(self.allTitles, self.numOfWords))
+        # self.title_numOfCharacters_dictionary = dict(zip(self.allTitles, self.numOfCharacters))
+        self.sortIndex()
+        
     def getAllArticle(self,root):
         article = root.findall(self.path)
         return article
+
+    def sortIndex(self):
+        for key, value in self.index.items():
+            temp = sorted(value)
+            temp = list(dict.fromkeys(temp))
+            self.index[key] = temp
+
+    def createIndex(self, string, num):
+        extract = re.findall(r'\w+', string, re.IGNORECASE)
+        for word in extract:
+            word = word.lower()
+            if(word in self.index):
+                self.index[word].append(num)
+                self.index[word] = list(dict.fromkeys(self.index[word]))
+            else:
+                self.index[word] = [num]
 
     def parsingContent(self,allArticle):
         result = []
@@ -42,8 +58,9 @@ class PubMedParser:
                     words = 0
                     chars = 0
                     for text in abstractText:
-                        words += len(re.findall('\w+',''.join(text.itertext())))
-                        chars += len(re.findall('\S',''.join(text.itertext())))
+                        self.createIndex(''.join(text.itertext()), len(result))
+                        words += len(re.findall(r'\w+',''.join(text.itertext())))
+                        chars += len(re.findall(r'\S',''.join(text.itertext())))
                         if 'Label' in text.attrib:
                             s+='<b>'+text.attrib['Label']+'</b>'+':<br>&nbsp&nbsp&nbsp&nbsp'+''.join(text.itertext())+' <br>'
                         else:
@@ -51,15 +68,19 @@ class PubMedParser:
                     numOfWords.append(words)
                     numOfCharacters.append(chars)
                     result.append(s)
+        print(len(result))
+        print(self.index['dengue'])
+        print(len(self.index['dengue']))
         return result, numOfWords, numOfCharacters
 
     def parsingTitle(self,allArticle):
         result = []
         for article in allArticle:
             articleTitle = article.find('ArticleTitle')
-            if(articleTitle == None):
+            if(articleTitle == None or articleTitle.text == None):
                 result.append('')
             else:
+                self.createIndex(str(articleTitle.text), len(result))
                 result.append(articleTitle.text)
         return result
 
@@ -87,37 +108,36 @@ class PubMedParser:
         return string
 
     def match(self,query):
-        query_string = ''
-        for q in query.split(' '):
-            query_string += '(' + q + ')|'
-        query_string = query_string[:-1]
-        titles = []
-        contents = []
-        label=[]
-        authors = []
-        numOfCharacters = []
-        numOfWords = []
-        for key, value in self.title_content_dictionary.items():
-            titleIterator = re.finditer(query_string, str(key), re.IGNORECASE)
-            contentIterator = re.finditer(query_string, value, re.IGNORECASE)
-            queryPosInTitle = [(m.start(), m.end()) for m in titleIterator]
-            queryPosInContent = [(m.start(), m.end()) for m in contentIterator]
-            if(queryPosInTitle or queryPosInContent):
-                titles.append(key)
-                numOfWords.append(self.title_numOfWords_dictionary[key])
-                numOfCharacters.append(self.title_numOfCharacters_dictionary[key])
-                contents.append(self.mark_content(queryPosInContent, value))
-                authors.append(','.join(self.title_author_dictionary[key]))
+        # query_string = ''
+        # for q in query.split(' '):
+        #     query_string += '(' + q + ')|'
+        # query_string = query_string[:-1]
+        # titles = []
+        # contents = []
+        # label=[]
+        # authors = []
+        # numOfCharacters = []
+        # numOfWords = []
+        # for key, value in self.title_content_dictionary.items():
+        #     titleIterator = re.finditer(query_string, str(key), re.IGNORECASE)
+        #     contentIterator = re.finditer(query_string, value, re.IGNORECASE)
+        #     queryPosInTitle = [(m.start(), m.end()) for m in titleIterator]
+        #     queryPosInContent = [(m.start(), m.end()) for m in contentIterator]
+        #     if(queryPosInTitle or queryPosInContent):
+        #         titles.append(key)
+        #         numOfWords.append(self.title_numOfWords_dictionary[key])
+        #         numOfCharacters.append(self.title_numOfCharacters_dictionary[key])
+        #         contents.append(self.mark_content(queryPosInContent, value))
+        #         authors.append(','.join(self.title_author_dictionary[key]))
+        
         comm = []
         for i, content in enumerate(contents):
             for j in range(len(query.split(' '))):
                 if(len(re.findall(query.split(' ')[j], content, re.IGNORECASE))):
                     if(j+1 == len(query.split(' '))):
                         comm.append(i)
-                        print(content)
                 else:
                     break
-        print(comm)
         return titles, contents ,authors, numOfWords, numOfCharacters, comm
 
     def countNumOfWords(self,contents):
