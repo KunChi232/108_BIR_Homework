@@ -37,11 +37,12 @@ def PubMedSearch(request):
     print("searching")
     if(request.method == 'GET'):
         query = request.GET['query']
-        titles, contents, authors , numOfWords, numOfCharacters, comm, words_times_pair = pmp.match(query)
-        numOfSentence ,contents = countNumOfSentence(contents)
-        return JsonResponse({'titles' : titles, 'contents' : contents, 'authors' : authors, 
-                            'numOfWords' : numOfWords, 'numOfChars' : numOfCharacters,
-                            'numOfSentence' : numOfSentence, 'comm' : comm, 'pair' : words_times_pair})
+        titles, titles_stem, contents , contents_stem, authors, numOfWords, numOfWords_stem, numOfCharacters, numOfCharacters_stem, comm, words_times_pair, word_stem_times_pair = pmp.match(query)
+        # print(contents_stem)
+        numOfSentence, numOfSentence_stem, contents, contents_stem= countNumOfSentence(contents,contents_stem)
+        return JsonResponse({'titles' : titles, 'titles_stem' : titles_stem, 'contents' : contents, 'contents_stem' : contents_stem,'authors' : authors, 
+                            'numOfWords' : numOfWords, 'numOfWords_stem' : numOfWords_stem, 'numOfChars' : numOfCharacters, 'numOfChars_stem' : numOfCharacters_stem,
+                            'numOfSentence' : numOfSentence, 'numOfSentence_stem' : numOfSentence_stem, 'comm' : comm, 'pair' : words_times_pair, 'pair_stem' : word_stem_times_pair})
 
 def TwitterSearch(request):
     print('searching')
@@ -65,8 +66,9 @@ def countNumOfCharacters(contents):
         numOfCharacters.append(len(re.findall(characterPattern, content)))
     return numOfCharacters
 
-def countNumOfSentence(contents):
+def countNumOfSentence(contents, contents_stem):
     numOfSentence = []
+    numOfSentence_stem = []
     for num, content in enumerate(contents):
         content = content + " "
         iterator = re.finditer(EOSPattern, content)
@@ -76,7 +78,17 @@ def countNumOfSentence(contents):
             numOfSentence.append(len(EOSPatternPosition))
         else:
             numOfSentence.append('0')
-    return numOfSentence, contents
+
+    for num, content_stem in enumerate(contents_stem):
+        content_stem = content_stem + " "
+        iterator = re.finditer(EOSPattern, content_stem)
+        EOSPatternPosition = [(m.start(), m.end()) for m in iterator]
+        if(EOSPatternPosition):
+            contents_stem[num] = mark_EOS(EOSPatternPosition, content_stem)
+            numOfSentence_stem.append(len(EOSPatternPosition))
+        else:
+            numOfSentence_stem.append('0')
+    return numOfSentence, numOfSentence_stem, contents, contents_stem
 def mark_EOS(position, content):
     for num , pos in enumerate(position):
         content = content[:pos[0] + num*50] + '<span style="background-color:#8bdaf7">&nbsp</span>' + content[pos[1] + num*50:]

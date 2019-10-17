@@ -105,7 +105,20 @@
             };
             reader.readAsText(file);
         };
-
+        function openContent(event, i){
+            if(document.getElementById('origin_'+i).style.display == 'block'){
+                document.getElementById('origin_'+i).style.display = 'none';
+                document.getElementById('stemming_'+i).style.display = 'block';
+                document.getElementById('tablinks_'+i).className = document.getElementById('tablinks_'+i).className.replace(" active","")
+            }
+            else{
+                document.getElementById('origin_'+i).style.display = 'block';
+                document.getElementById('stemming_'+i).style.display = 'none';
+                document.getElementById('tablinks_'+i).className = document.getElementById('tablinks_'+i).className.replace(" active","");
+            }
+            event.className += " active";
+            alert(event.className)
+        };
         function PubMedSearch(){
             $.ajax({
                 type:"get",
@@ -115,7 +128,7 @@
                 },
             
                 success:function(data){
-                    draw(data['pair'])
+                    draw(data['pair_stem'])
                     var numOfSearching = data['titles'].length;
                     var numOfComm = data['comm'].length;
                     document.getElementById('resultDisplay').style.display='block';
@@ -137,19 +150,32 @@
                             +'<div id=article>'
                                 +'<button class=accordion onclick="slideDownAnim(this)">'+data['titles'][i]+'</button>'
                                 +'<div class=panel>'
-                                    +'<div id=author>'+data['authors'][i]+'</div>'
-                                    +'<div id=content>'+data['contents'][i]+'</div>'
-                                    +'<div id=statistics>摘要字數 : '+data['numOfWords'][i]+" 字元數 : "+data['numOfChars'][i]+' 句子數 : '+data['numOfSentence'][i]+'</div>'
+                                    +'<div class="tab">'
+                                        +'<button class="tablinks_'+i+'" onclick="openContent(event,'+i+')"'+' id="defaultOpen">原文</button>'
+                                        +'<button class="tablinks_'+i+'" onclick="openContent(event,'+i+')"'+'>Stemming</button>'
+                                    +'</div>'
+                                    +'<div id="origin_'+i+'"'+'>'
+                                        +'<div id=author>'+data['authors'][i]+'</div>'
+                                        +'<div id=content>'+data['contents'][i]+'</div>'
+                                        +'<div id=statistics>摘要字數 : '+data['numOfWords'][i]+" 字元數 : "+data['numOfChars'][i]+' 句子數 : '+data['numOfSentence'][i]+'</div>'
+                                    +'</div>'
+                                    +'<div id="stemming_'+i+'"'+'>'
+                                        +'<div id=author>'+data['authors'][i]+'</div>'
+                                        +'<div id=content>'+data['contents_stem'][i]+'</div>'
+                                        +'<div id=statistics>摘要字數 : '+data['numOfWords_stem'][i]+" 字元數 : "+data['numOfChars_stem'][i]+' 句子數 : '+data['numOfSentence_stem'][i]+'</div>'
+                                    +'</div>'
                                 +'</div>'
                             +'</div><br>';
                     } 
-                    $('.bg').append(list)
+                    $('.bg').append(list);
+                    document.getElementById("defaultOpen").click();
                 },
                 error:function(xhr){
                     alert('error');
                 }        
             });
         };
+
 
         function TwitterSearch(){
             $.ajax({
@@ -416,7 +442,27 @@
             text-decoration: none;
             cursor: pointer;
         }
-
+        .tab button.active {
+            background-color: #ccc;
+        }
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 17px;
+        }
+        .tab {
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+        }
+        .tab button:hover {
+            background-color: #ddd;
+        }
         /* Add Animation */
         @-webkit-keyframes animatetop {
             from {top:-300px; opacity:0} 
@@ -427,7 +473,15 @@
             from {top:-300px; opacity:0}
             to {top:0; opacity:1}
         }
+        @-webkit-keyframes fadeEffect {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
 
+        @keyframes fadeEffect {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
     </style>
     <head>
         <link href='https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css' rel='stylesheet'></link>
