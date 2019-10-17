@@ -19,6 +19,7 @@ def index(request):
     return render(request, 'SearchEngine/index.html')
 
 def upload(request):
+    print("read")
     if(request.method == 'POST'):
         file_name = request.POST['file_name']
         contents = request.POST['contents']
@@ -28,17 +29,19 @@ def upload(request):
         else:
             global tp
             tp = TwitterParser(contents)
+    else:
+        print('doesnt read')
     return JsonResponse({'success':'success'})
 
 def PubMedSearch(request):
     print("searching")
     if(request.method == 'GET'):
         query = request.GET['query']
-        titles, contents, authors , numOfWords, numOfCharacters, comm = pmp.match(query)
+        titles, contents, authors , numOfWords, numOfCharacters, comm, words_times_pair = pmp.match(query)
         numOfSentence ,contents = countNumOfSentence(contents)
         return JsonResponse({'titles' : titles, 'contents' : contents, 'authors' : authors, 
                             'numOfWords' : numOfWords, 'numOfChars' : numOfCharacters,
-                            'numOfSentence' : numOfSentence, 'comm' : comm})
+                            'numOfSentence' : numOfSentence, 'comm' : comm, 'pair' : words_times_pair})
 
 def TwitterSearch(request):
     print('searching')

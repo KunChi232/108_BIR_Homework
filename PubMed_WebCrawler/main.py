@@ -111,19 +111,20 @@ class PubMedParser:
         for q in query:
             query_string += '(' + q + ')|'
         query_string = query_string[:-1]
-        titles = []
-        contents = []
-        authors = []
-        numOfCharacters = []
-        numOfWords = []
-        allWordsTimes = dict()
-
+        titles = list()
+        contents = list()
+        authors = list()
+        numOfCharacters = list()
+        numOfWords = list()
+        words_times_pair = list()
         union = list()
         for q in query:
             try:
                 union = list(set(union) | set(self.index[q.lower()]))
             except KeyError as e:
                 print(e)
+        words_times_pair = (self.countAllWordsTimes(union))
+                
         for i in union:
             titleIterator = re.finditer(query_string, self.allTitles[i], re.IGNORECASE)
             contentIterator = re.finditer(query_string, self.allContents[i], re.IGNORECASE)
@@ -133,10 +134,9 @@ class PubMedParser:
                 titles.append(self.allTitles[i])
                 numOfWords.append(self.numOfWords[i])
                 numOfCharacters.append(self.numOfCharacters[i])
-                allWordsTimes = self.countAllWordsTimes(self.allContents[i], allWordsTimes)
+                # allWordsTimes = self.countAllWordsTimes(self.allContents[i], allWordsTimes)
                 contents.append(self.mark_content(queryPosInContent, self.allContents[i]))
                 authors.append(','.join(self.allAuthorName[i]))
-
         comm = []
         for i, content in enumerate(contents):
             for j in range(len(query)):
@@ -147,21 +147,30 @@ class PubMedParser:
                     break
         end_time = time.time() - start_time
         print(end_time)
-        print(allWordsTimes)
-        return titles, contents ,authors, numOfWords, numOfCharacters, comm, 
+        print(words_times_pair)
+        return titles, contents ,authors, numOfWords, numOfCharacters, comm, words_times_pair
 
-    def countAllWordsTimes(self, content, allWordsTimes):
+    def countAllWordsTimes(self, union):
+        words_times_dict = dict()
         tags = ['<br>', '</br>', '&nbsp', '<b>', '</b>']
-        for tag in tags:
-            content = content.replace(tag, '')
-        extract = re.findall(r'\w+', str(content))
-        for word in extract:
-            word = word.lower()
-            if(word in allWordsTimes):
-                allWordsTimes[word] = allWordsTimes[word]+1
-            else:
-                allWordsTimes[word] = 1
-        return allWordsTimes
+        for i in union:
+            content = self.allContents[i]
+            for tag in tags:
+                content = content.replace(tag, '')
+            extract = re.findall(r'\w+', str(content))
+            for word in extract:
+                word = word.lower()
+                count = words_times_dict.get(word, 0)
+                words_times_dict[word] = count + 1
+        print(words_times_dict)
+        return self.separate_dict_sotd(words_times_dict)
+
+    def separate_dict_sotd(self,words_times_dict):
+        pairs = list(words_times_dict.items())
+        pairs.sort(key = lambda tup:tup[1], reverse=True)
+        print(pairs)
+        return pairs
+
     class color:
         RED_START = '<font color=red>'
         BULE_START = '<font color=blue>'

@@ -1,8 +1,18 @@
+{% load staticfiles %}
 <!DOCTYPE html>
 <html style="font-family: Georgia">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
-    <script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
 
+    <script type="text/javascript"></script>
+    <script>
+        window.onclick = function(event) {
+            var modal = document.getElementById("myModal");
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
         function slideDownAnim(element){
             var panel = element.nextElementSibling;
             if (panel.style.maxHeight) {
@@ -10,6 +20,60 @@
             } else {
             panel.style.maxHeight=panel.scrollHeight+'px';
             }
+        };
+        function draw(pairs){
+            // var data = new google.visualization.DataTable();
+            // data.addColumn('string', 'words');
+            // data.addColumn('number', 'times');
+            // for(var i = 0; i < pairs[0].length/1000; i++){
+            //     data.addRows([
+            //         [pairs[0][i][0],pairs[0][i][1]]
+            //     ])
+            // };
+            // var options = {
+            // title: 'Zipf Disturbution',
+            // curveType: 'function',
+            // legend: { position: 'bottom' }
+            // };
+            // var chart = new google.charts.Line(document.getElementById('modal-content'));
+            // chart.draw(data, options);
+            var times = [];
+            var labels = [];
+            for(var i = 0; i < pairs.length/100; i++){
+                labels.push(pairs[i][0]);
+                times.push(pairs[i][1]);
+            }
+            var ctx = document.getElementById("modal-body").getContext('2d');
+            var chars = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels:labels,
+                    datasets:[{
+                        data:times,
+                        borderColor:"#3ccbe8"
+                    }],
+                },
+                options:{
+                    layout:{
+                        padding:{
+                            bottom:100,
+                            right:30
+                        }
+                    },
+                    legend:{
+                        display:false
+                    }
+                                     
+                }
+            })
+        };
+        function display_draw(){
+            var modal = document.getElementById("myModal");
+            modal.style.display = "block";
+        };
+        function close(){
+            var modal = document.getElementById("myModal");
+            model.style.display = "none";
         };
         function readSingleFile(e) {
             var file = e.files[0];
@@ -22,7 +86,7 @@
                 contents = e.target.result;
                 file_name = file.name;
                 $.ajax({
-                    type:'post',
+                    type:'POST',
                     url:'upload',
                     data:{
                         file_name:file_name,
@@ -32,29 +96,15 @@
 
                     success:function(e){
                         alert(file_name + ' 上傳成功')
+                    },
+                    error:function(e){
+                        alert(e)
                     }
                 })
 
             };
             reader.readAsText(file);
         };
-        // function uploadFile(file_name, contents){
-        //     $.ajax({
-        //         type:"post",
-        //         url:'upload',
-        //         data:{
-        //             file_name=file_name,
-        //             contents=contents
-        //         },
-
-        //         success:function(e){
-        //             alert("successful")
-        //         },
-        //         error:function(xhr){
-        //             alert('error');
-        //         }  
-        //     })
-        // };
 
         function PubMedSearch(){
             $.ajax({
@@ -65,6 +115,7 @@
                 },
             
                 success:function(data){
+                    draw(data['pair'])
                     var numOfSearching = data['titles'].length;
                     var numOfComm = data['comm'].length;
                     document.getElementById('resultDisplay').style.display='block';
@@ -138,6 +189,7 @@
         };
 
         function search(){
+            alert('search')
             if($('#selector').val() == 'PubMed'){
                 PubMedSearch();
             } else {
@@ -269,12 +321,141 @@
             padding: 8px;
             border-radius: 5px;
         }
+        #title-area{
+            color: #333333;
+        }
+        ul{ 
+            width: 100%;
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #333;
+            top:0;
+            left: 0;
+            margin: 0;
+            padding: 0;
+        }
+        li a{
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+        }
+        li a:hover{
+            background-color: #111;
+            cursor: pointer;
+        }
+        li{
+            float: left;
+
+        }
+        #bar{
+            position: absolute;
+            width: 100%;
+            list-style-type: none;
+            padding: 0;
+            overflow: hidden;
+            background-color: #333;
+            top:0;
+            left: 0;
+            margin: 0;
+            padding: 0;
+        }
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            padding-top: 100px; /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+            /* Modal Content */
+        .modal-content {
+            position: relative;
+            background-color: #fefefe;
+            margin: auto;
+            padding: 0;
+            border: 1px solid #888;
+            width: 80%;
+            height: 80%;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+            -webkit-animation-name: animatetop;
+            -webkit-animation-duration: 0.4s;
+            animation-name: animatetop;
+            animation-duration: 0.4s
+        }
+        .modal-header {
+            padding: 2px 16px;
+            background-color: #5cb85c;
+            color: white;
+        }
+
+        .modal-body{
+            padding: 2px 16px;
+            height: 100%;
+        }
+
+        .close {
+            color: white;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Add Animation */
+        @-webkit-keyframes animatetop {
+            from {top:-300px; opacity:0} 
+            to {top:0; opacity:1}
+        }
+
+        @keyframes animatetop {
+            from {top:-300px; opacity:0}
+            to {top:0; opacity:1}
+        }
+
     </style>
     <head>
         <link href='https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css' rel='stylesheet'></link>
+        <div id="bar">
+            <ul class="title-area">
+                <li>
+                    <a>IIR</a>
+                </li>
+                <li onclick="display_draw()">
+                    <a>zipf</a>
+                </li>
+            </ul>
+        </div>
+        <div id="myModal" class="modal">
+            <!-- Modal content -->
+            <div class="modal-content" id="modal-content">
+              <div class="modal-header" id="modal-header">
+                <span class="close" onclick="close()">&times;</span>
+                <h2>Zipf Disturbution</h2>
+              </div>
+              <canvas class="modal-body" id="modal-body"></canvas>
+              </canvas>
+            </div>
+          </div>
     </head>
     <body style="background-color: #F5F5F5">
         <div style="text-align: center" class=title>
+            <br><br>
             <h1 style="font-size: 50px">My Browser</h1>
             <table style="margin-left:auto; margin-right:auto">
                 <tr>
@@ -301,6 +482,7 @@
             <h3 id=resultDisplay style="display: none">共有<var id=numOfSearching >XXX</var>項結果</h3>
             <h3 id=comm style="display: none">同時擁有<var id=key>xxxx</var> <var id=numOfComm>XXX</var></h3>
         </div>
+        <div id=chart_div></div>
         <br>
         <hr color="#DBDBDB">
 
