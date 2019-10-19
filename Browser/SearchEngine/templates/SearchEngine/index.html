@@ -193,31 +193,62 @@
             btnStemmingCanvas.className += " active";
         };
 
-        function PubMedSearch(){
+        function currentSearchClick(){
+            var query = $('#currentSearch').text();
+            document.getElementsByName('input')[0].value = query;
+            PubMedSearch(0);
+        };
+
+        function changeSearchClick(){
+            var query = $('#changeSearch').text();
+            document.getElementsByName('input')[0].value = query;
+            PubMedSearch(0);
+        };
+
+        function changeKeyword(after, before){
+            document.getElementById('searchResult').style.display = 'block'
+
+            $('#currentSearch').text(after)
+            $('#changeSearch').text(before)
+        };
+
+        function intiPage(numOfSearching){
+            $("#numOfSearching").text(numOfSearching);
+            document.getElementById('resultDisplay').style.display='block';
+            document.getElementById('comm').style.display="none";
+            document.getElementById('searchResult').style.display = 'none';
+            $('.bg').empty();
+        };
+
+        function display_comm(data, numOfComm){
+            document.getElementById('comm').style.display="block";
+            $("#key").text(document.getElementsByName('input')[0].value+"的文章 : ");
+            var s=''
+            for(var i=0;i<numOfComm;i++){
+                s+= data['comm'][i]+1+" ";
+            }
+            $("#numOfComm").text(s);
+        }
+        function PubMedSearch(_flag){
             $.ajax({
                 type:"get",
                 url:"PubMed",
                 data:{
-                    query:document.getElementsByName('input')[0].value
+                    query:document.getElementsByName('input')[0].value,
+                    flag:_flag
                 },
-            
+                
                 success:function(data){
                     draw(data['pair'], data['pair_stem']);
                     var numOfSearching = data['titles'].length;
                     var numOfComm = data['comm'].length;
-                    document.getElementById('resultDisplay').style.display='block';
-                    document.getElementById('comm').style.display="none"
-                    $("#numOfSearching").text(numOfSearching);
+                    intiPage(numOfSearching);
                     if(document.getElementsByName('input')[0].value.split(" ").length > 1){
-                        document.getElementById('comm').style.display="block";
-                        $("#key").text(document.getElementsByName('input')[0].value+"的文章 : ");
-                        var s=''
-                        for(var i=0;i<numOfComm;i++){
-                            s+= data['comm'][i]+1+" ";
-                        }
-                        $("#numOfComm").text(s);
+                        display_comm(data, numOfComm);
                     };
-                    $('.bg').empty();
+                    if(data['edit'][0] == 1){
+                        changeKeyword(data['edit'][1], document.getElementsByName('input')[0].value)
+                    }
                     var list=''
                     for(var i=0;i<numOfSearching;i++){
                         list+='<div id=serial>'+(i+1)+'.</div>'
@@ -291,10 +322,9 @@
             });
         };
 
-        function search(){
-            alert('search')
+        function search(flag){
             if($('#selector').val() == 'PubMed'){
-                PubMedSearch();
+                PubMedSearch(flag);
             } else {
                 TwitterSearch();
             }
@@ -571,6 +601,20 @@
             color: white;
             outline: none;
         }
+        #currentSearch{
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: red;
+        }
+        #changeSearch{
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: blue;
+        }
         /* Add Animation */
         @-webkit-keyframes animatetop {
             from {top:-300px; opacity:0} 
@@ -646,7 +690,7 @@
                         </span>
                     </td>
                     <td>
-                        <input id=btnSearch type="button" onclick="search()" value="Search">
+                        <input id=btnSearch type="button" onclick="search(1)" value="Search">
                     </td>
                 </tr>
             </table>
@@ -656,6 +700,10 @@
             </label>
             <h3 id=resultDisplay style="display: none">共有<var id=numOfSearching >XXX</var>項結果</h3>
             <h3 id=comm style="display: none">同時擁有<var id=key>xxxx</var> <var id=numOfComm>XXX</var></h3>
+            <div id="searchResult" style="display: none;">
+                <h3>目前顯示的是以下字詞的搜尋結果：<button id='currentSearch' onclick="currentSearchClick()"></button></h3>
+                <h4>您可以改回搜尋：<button id='changeSearch' onclick="changeSearchClick()"></button></h4>
+            </div>
         </div>
         <div id=chart_div></div>
         <br>

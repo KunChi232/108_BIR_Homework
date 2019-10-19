@@ -1,11 +1,25 @@
-def minEditDist(sm,sn):
-  m,n = len(sm),len(sn)
-  D = map(lambda y: map(lambda x,y : y if x==0 else x if y==0 else 0,
-    range(n+1),[y]*(n+1)), range(m+1))
-  for i in range(1,m+1):
-    for j in range(1,n+1):
-      D[i][j] = min( D[i-1][j]+1, D[i][j-1]+1, 
-        D[i-1][j-1] + apply(lambda: 0 if sm[i-1] == sn[j-1] else 2)) 
-  for i in range(0,m+1):
-    print D[i] 
-  return D[m][n] 
+import sys
+
+def minEditDist(query,index):
+    print(query)
+    result = str()
+    minDist = sys.maxsize
+    for key, value in index.items():
+        s1 = query
+        s2 = key
+        if len(s1) > len(s2):
+            s1, s2 = s2, s1
+        distances = range(len(s1) + 1)
+        for i2, c2 in enumerate(s2):
+            distances_ = [i2+1]
+            for i1, c1 in enumerate(s1):
+                if c1 == c2:
+                    distances_.append(distances[i1])
+                else:
+                    distances_.append(1 + min((distances[i1], distances[i1 + 1], distances_[-1])))
+            distances = distances_
+        if(distances[-1] < minDist):
+            result = key
+            minDist = distances[-1]
+    print(result)
+    return result, minDist

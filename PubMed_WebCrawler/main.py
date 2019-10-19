@@ -5,6 +5,8 @@ import sys, os
 import time, nltk
 from nltk.stem import PorterStemmer
 from nltk.tokenize import word_tokenize
+sys.path.append('../Utils')
+from Utils.minEditDist import minEditDist
 class PubMedParser:
     path = 'PubmedArticle/MedlineCitation/Article'
     index = dict()
@@ -131,7 +133,7 @@ class PubMedParser:
             string = string[:tup[0] + num*23] + self.color.RED_START + string[tup[0] + num*23:tup[1] + num*23] + self.color.END + string[tup[1] + num*23:]
         return string
 
-    def match(self,query):
+    def match(self, query, cal_dist_flag):
         titles = list()
         titles_stem = list()
         contents = list()
@@ -142,7 +144,15 @@ class PubMedParser:
         numOfWords = list()
         numOfWords_stem = list()
         union = list()
-
+        edit = [0, query]
+        if(cal_dist_flag == '1'):
+            temp, minDist= minEditDist(query, self.index)
+            print('Mini Edit Dist : {}'.format(minDist))
+            if(minDist == 0):
+                edit = [0, query]
+            elif(minDist > 0 and minDist < 5):
+                edit = [1, temp]
+                query = temp
 
         start_time = time.time()
         query = query.split(' ')
@@ -191,7 +201,7 @@ class PubMedParser:
                     break
         end_time = time.time() - start_time
         print(end_time)
-        return titles, titles_stem, contents , contents_stem, authors, numOfWords, numOfWords_stem, numOfCharacters, numOfCharacters_stem, comm, words_times_pair, word_stem_times_pair
+        return titles, titles_stem, contents , contents_stem, authors, numOfWords, numOfWords_stem, numOfCharacters, numOfCharacters_stem, comm, words_times_pair, word_stem_times_pair,edit
 
     def stemming(self, string):
         words = word_tokenize(string)

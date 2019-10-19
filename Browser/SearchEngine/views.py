@@ -37,12 +37,14 @@ def PubMedSearch(request):
     print("searching")
     if(request.method == 'GET'):
         query = request.GET['query']
-        titles, titles_stem, contents , contents_stem, authors, numOfWords, numOfWords_stem, numOfCharacters, numOfCharacters_stem, comm, words_times_pair, word_stem_times_pair = pmp.match(query)
-        # print(contents_stem)
+        flag = request.GET['flag']
+        print(flag)
+        titles, titles_stem, contents , contents_stem, authors, numOfWords, numOfWords_stem, numOfCharacters, numOfCharacters_stem, comm, words_times_pair, word_stem_times_pair, edit = pmp.match(query, flag)
         numOfSentence, numOfSentence_stem, contents, contents_stem= countNumOfSentence(contents,contents_stem)
         return JsonResponse({'titles' : titles, 'titles_stem' : titles_stem, 'contents' : contents, 'contents_stem' : contents_stem,'authors' : authors, 
                             'numOfWords' : numOfWords, 'numOfWords_stem' : numOfWords_stem, 'numOfChars' : numOfCharacters, 'numOfChars_stem' : numOfCharacters_stem,
-                            'numOfSentence' : numOfSentence, 'numOfSentence_stem' : numOfSentence_stem, 'comm' : comm, 'pair' : words_times_pair, 'pair_stem' : word_stem_times_pair})
+                            'numOfSentence' : numOfSentence, 'numOfSentence_stem' : numOfSentence_stem, 'comm' : comm, 'pair' : words_times_pair, 
+                            'pair_stem' : word_stem_times_pair, 'edit' : edit})
 
 def TwitterSearch(request):
     print('searching')
