@@ -76,9 +76,9 @@ class PubMedParser:
                         fullText = ''.join(text.itertext())
                         self.createIndex(fullText, len(content))
                         words += len(re.findall(r'\w+', fullText))
-                        words_stem += len(word_tokenize(fullText))
+                        words_stem += len(re.findall(r'\w+',self.stemming(fullText)))
                         chars += len(re.findall(r'\S', fullText))
-                        chars_stem += len(re.findall(r'\w+', ' '.join(word_tokenize(fullText))))
+                        chars_stem += len(re.findall(r'\S', self.stemming(fullText)))
                         if 'Label' in text.attrib:
                             s+='<b>'+text.attrib['Label']+'</b>'+':<br>&nbsp&nbsp&nbsp&nbsp'+fullText+' <br>'
                             _s+='<b>'+self.stemming(text.attrib['Label'])+'</b>'+':<br>&nbsp&nbsp&nbsp&nbsp'+self.stemming(fullText)+' <br>'
@@ -129,7 +129,6 @@ class PubMedParser:
     def mark_content(self,position, string):
         for num, tup in enumerate(position):
             string = string[:tup[0] + num*23] + self.color.RED_START + string[tup[0] + num*23:tup[1] + num*23] + self.color.END + string[tup[1] + num*23:]
-        print(string)
         return string
 
     def match(self,query):

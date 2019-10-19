@@ -19,31 +19,16 @@
             panel.style.maxHeight = null;
             } else {
             panel.style.maxHeight=panel.scrollHeight+'px';
-            }
+            };
         };
-        function draw(pairs){
-            // var data = new google.visualization.DataTable();
-            // data.addColumn('string', 'words');
-            // data.addColumn('number', 'times');
-            // for(var i = 0; i < pairs[0].length/1000; i++){
-            //     data.addRows([
-            //         [pairs[0][i][0],pairs[0][i][1]]
-            //     ])
-            // };
-            // var options = {
-            // title: 'Zipf Disturbution',
-            // curveType: 'function',
-            // legend: { position: 'bottom' }
-            // };
-            // var chart = new google.charts.Line(document.getElementById('modal-content'));
-            // chart.draw(data, options);
+        function draw(pairs, pairs_stem){
             var times = [];
             var labels = [];
             for(var i = 0; i < pairs.length/100; i++){
                 labels.push(pairs[i][0]);
                 times.push(pairs[i][1]);
             }
-            var ctx = document.getElementById("modal-body").getContext('2d');
+            var ctx = document.getElementById("original_canvas").getContext('2d');
             var chars = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -56,8 +41,9 @@
                 options:{
                     layout:{
                         padding:{
-                            bottom:100,
-                            right:30
+                            bottom:150,
+                            right:30,
+                            top:30
                         }
                     },
                     legend:{
@@ -65,11 +51,45 @@
                     }
                                      
                 }
-            })
+            });
+            var times_stem = [];
+            var labels_stem = [];
+            for(var i = 0; i < pairs_stem.length/100; i++){
+                labels_stem.push(pairs_stem[i][0]);
+                times_stem.push(pairs_stem[i][1]);
+            }
+            var ctx = document.getElementById("stemming_canvas").getContext('2d');
+            var chars = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels:labels_stem,
+                    datasets:[{
+                        data:times_stem,
+                        borderColor:"#3ccbe8"
+                    }],
+                },
+                options:{
+                    layout:{
+                        padding:{
+                            bottom:150,
+                            right:30,
+                            top:30
+                        }
+                    },
+                    legend:{
+                        display:false
+                    }
+                                     
+                }
+            });
+
+
         };
         function display_draw(){
             var modal = document.getElementById("myModal");
             modal.style.display = "block";
+            document.getElementsByClassName("defaultOpen")[0].focus();
+
         };
         function close(){
             var modal = document.getElementById("myModal");
@@ -105,20 +125,74 @@
             };
             reader.readAsText(file);
         };
-        function openContent(event, i){
-            if(document.getElementById('origin_'+i).style.display == 'block'){
-                document.getElementById('origin_'+i).style.display = 'none';
-                document.getElementById('stemming_'+i).style.display = 'block';
-                document.getElementById('tablinks_'+i).className = document.getElementById('tablinks_'+i).className.replace(" active","")
-            }
-            else{
-                document.getElementById('origin_'+i).style.display = 'block';
-                document.getElementById('stemming_'+i).style.display = 'none';
-                document.getElementById('tablinks_'+i).className = document.getElementById('tablinks_'+i).className.replace(" active","");
-            }
-            event.className += " active";
-            alert(event.className)
+        
+        function openContent_1(i){
+            var original = document.getElementById('content_origin_'+i);
+            var stemming = document.getElementById('content_stemming_'+i);
+            var btnOrigin = document.getElementsByClassName('btnContentOrigin_'+i)[0];
+            var btnStemming = document.getElementsByClassName('btnContentStemming_'+i)[0];
+
+            original.style.display = 'block';
+            stemming.style.display = 'none';
+
+            btnOrigin.className = btnOrigin.className.replace(" active","")
+            btnStemming.className = btnStemming.className.replace(" active", "");
+            btnOrigin.className += " active";
+
+            // btnOrigin.style.backgroundColor = "#333333";
+            // btnOrigin.style.color = "white";
+
+            // btnStemming.style.backgroundColor = "#F0F0F0";
+            // btnStemming.style.color = "#000";
+            
+
         };
+
+        function openContent_2(i){
+            var original = document.getElementById('content_origin_'+i);
+            var stemming = document.getElementById('content_stemming_'+i);
+            var btnOrigin = document.getElementsByClassName('btnContentOrigin_'+i)[0];
+            var btnStemming = document.getElementsByClassName('btnContentStemming_'+i)[0];
+
+            original.style.display = 'none';
+            stemming.style.display = 'block';
+
+            btnOrigin.className = btnOrigin.className.replace(" active","")
+            btnStemming.className = btnStemming.className.replace(" active", "");
+            btnStemming.className += " active";
+
+            // btnOrigin.style.backgroundColor = "#F0F0F0";
+            // btnOrigin.style.color = "#000";
+
+            // btnStemming.style.backgroundColor = "#333333";
+            // btnStemming.style.color = "white";
+        };
+
+        function changeZipf_1(){
+            document.getElementById('canvas1').style.display='block';
+            document.getElementById('canvas2').style.display='none';
+            
+            var btnOriginCanvas = document.getElementById('btnOriginCanvas')
+            var btnStemmingCanvas = document.getElementById('btnStemmingCanvas');
+
+            btnOriginCanvas.className = btnOriginCanvas.className.replace(" active","")
+            btnStemmingCanvas.className = btnStemmingCanvas.className.replace(" active", "");
+            btnOriginCanvas.className += " active";
+
+        };
+
+        function changeZipf_2(){
+            document.getElementById('canvas1').style.display='none';
+            document.getElementById('canvas2').style.display='block';
+
+            var btnOriginCanvas = document.getElementById('btnOriginCanvas')
+            var btnStemmingCanvas = document.getElementById('btnStemmingCanvas');
+
+            btnOriginCanvas.className = btnOriginCanvas.className.replace(" active","")
+            btnStemmingCanvas.className = btnStemmingCanvas.className.replace(" active", "");
+            btnStemmingCanvas.className += " active";
+        };
+
         function PubMedSearch(){
             $.ajax({
                 type:"get",
@@ -128,7 +202,7 @@
                 },
             
                 success:function(data){
-                    draw(data['pair_stem'])
+                    draw(data['pair'], data['pair_stem']);
                     var numOfSearching = data['titles'].length;
                     var numOfComm = data['comm'].length;
                     document.getElementById('resultDisplay').style.display='block';
@@ -150,17 +224,16 @@
                             +'<div id=article>'
                                 +'<button class=accordion onclick="slideDownAnim(this)">'+data['titles'][i]+'</button>'
                                 +'<div class=panel>'
-                                    +'<div class="tab">'
-                                        +'<button class="tablinks_'+i+'" onclick="openContent(event,'+i+')"'+' id="defaultOpen">原文</button>'
-                                        +'<button class="tablinks_'+i+'" onclick="openContent(event,'+i+')"'+'>Stemming</button>'
+                                    +'<div id=author>'+data['authors'][i]+'</div>'
+                                    +'<div class="content_tab">'
+                                        +'<button onclick="openContent_1('+i+')"'+'class="btnContentOrigin_'+i+' defaultOpen">original</button>'
+                                        +'<button onclick="openContent_2('+i+')" class="btnContentStemming_'+i+'">Stemming</button>'
                                     +'</div>'
-                                    +'<div id="origin_'+i+'"'+'>'
-                                        +'<div id=author>'+data['authors'][i]+'</div>'
+                                    +'<div id="content_origin_'+i+'"'+' class=tabcontent>'
                                         +'<div id=content>'+data['contents'][i]+'</div>'
                                         +'<div id=statistics>摘要字數 : '+data['numOfWords'][i]+" 字元數 : "+data['numOfChars'][i]+' 句子數 : '+data['numOfSentence'][i]+'</div>'
                                     +'</div>'
-                                    +'<div id="stemming_'+i+'"'+'>'
-                                        +'<div id=author>'+data['authors'][i]+'</div>'
+                                    +'<div id="content_stemming_'+i+'"'+' class=tabcontent>'
                                         +'<div id=content>'+data['contents_stem'][i]+'</div>'
                                         +'<div id=statistics>摘要字數 : '+data['numOfWords_stem'][i]+" 字元數 : "+data['numOfChars_stem'][i]+' 句子數 : '+data['numOfSentence_stem'][i]+'</div>'
                                     +'</div>'
@@ -168,7 +241,11 @@
                             +'</div><br>';
                     } 
                     $('.bg').append(list);
-                    document.getElementById("defaultOpen").click();
+                    var defaultOpen =  document.getElementsByClassName("defaultOpen");
+                    for(var i = 0; i < defaultOpen.length; i++){
+                        defaultOpen[i].click();
+                    }
+                    // document.getElementsByClassName('defaultOpen')[0].click();
                 },
                 error:function(xhr){
                     alert('error');
@@ -225,6 +302,9 @@
         }
     </script>
     <style type="text/css">
+        #canvas2{
+            display: none;
+        }
         #serial{
             font-size: 30px;
         }
@@ -442,26 +522,54 @@
             text-decoration: none;
             cursor: pointer;
         }
-        .tab button.active {
-            background-color: #ccc;
+        .content_tab button:hover {
+            background-color: #ddd;
         }
-        .tab button {
-            background-color: inherit;
-            float: left;
-            border: none;
+        .content_tab button.active {
+            background: #333333;
+            color: white;
             outline: none;
+        }
+        .content_tab button {
+            font-weight: bold;
+            color: #000;
+            background: #F0F0F0;
+            float: left;
             cursor: pointer;
-            padding: 14px 16px;
+            margin: 10px;
+            padding: 10px;
             transition: 0.3s;
             font-size: 17px;
+            border: 1px solid #CCC;
+            border-bottom-color:#B7B7B7;
+            z-index: 1;
+            
         }
-        .tab {
-            overflow: hidden;
-            border: 1px solid #ccc;
-            background-color: #f1f1f1;
+        .content_tab {
+            margin-top: 10px;
         }
-        .tab button:hover {
-            background-color: #ddd;
+        .tabcontent{
+            float: left;
+        }
+        .canvas_tab button{
+            font-weight: bold;
+            color: #000;
+            background: #F0F0F0;
+            cursor: pointer;
+            margin-top: 6px;
+            margin-left: 6px;
+            border-radius: 5px 5px 5px 5px;
+            padding: 5px;
+            transition: 0.3s;
+            font-size: 17px;
+            border: 1px solid #CCC;
+            border-bottom-color:#B7B7B7;
+            z-index: 1;
+        }
+        .canvas_tab button.active{
+            background: #333333;
+            color: white;
+            outline: none;
         }
         /* Add Animation */
         @-webkit-keyframes animatetop {
@@ -502,7 +610,20 @@
                 <span class="close" onclick="close()">&times;</span>
                 <h2>Zipf Disturbution</h2>
               </div>
-              <canvas class="modal-body" id="modal-body"></canvas>
+              <div class="canvas_tab">
+                  <button onclick="changeZipf_1()" value="original" class="defaultOpen" id="btnOriginCanvas">original</button>
+                  <button onclick="changeZipf_2()" value="stemming" id="btnStemmingCanvas">stemming</button>
+              </div>
+              <hr color="#DBDBDB">
+              <div id='canvas_container'>
+                  <div id='canvas1'>
+                        <canvas id="original_canvas"></canvas>
+                  </div>
+                  <div id='canvas2'>
+                        <canvas id="stemming_canvas"></canvas>  
+                  </div>
+              </div>
+
               </canvas>
             </div>
           </div>
