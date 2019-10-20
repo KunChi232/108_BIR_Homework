@@ -230,9 +230,9 @@ class PubMedParser:
                 word = word.lower()
                 count = words_stem_times_dict.get(word, 0)
                 words_stem_times_dict[word] = count + 1
-        return self.separate_dict_sotd(words_times_dict), self.separate_dict_sotd(words_stem_times_dict)
-
-    def separate_dict_sotd(self,words_times_dict):
+        return self.separate_dict_sort(words_times_dict), self.separate_dict_sort(words_stem_times_dict)
+    #sort dict by value and turn to list
+    def separate_dict_sort(self,words_times_dict):
         pairs = list(words_times_dict.items())
         pairs.sort(key = lambda tup:tup[1], reverse=True)
         return pairs

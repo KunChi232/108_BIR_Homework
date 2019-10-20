@@ -49,10 +49,11 @@ def TwitterSearch(request):
     print('searching')
     if(request.method == 'GET'):
         query = request.GET['query']
-        texts, user_names,screen_names ,created_ats, numOfWords, numOfCharacters = tp.match(query)
+        texts, texts_stem, user_names,screen_names ,created_ats, numOfWords, numOfWords_stem, numOfCharacters, numOfCharacters_stem, words_times_pair, word_stem_times_pair = tp.match(query)
         # print(texts, user_names, created_ats)
-        return JsonResponse({'texts' : texts, 'user_names' : user_names,'screen_names' : screen_names, 
-                            'created_ats' : created_ats, 'numOfWords' : numOfWords, 'numOfChars' : numOfCharacters})
+        return JsonResponse({'texts' : texts, 'texts_stem' : texts_stem, 'user_names' : user_names,'screen_names' : screen_names, 
+                            'created_ats' : created_ats, 'numOfWords' : numOfWords, 'numOfWords_stem' : numOfWords_stem, 'numOfChars' : numOfCharacters,
+                            'numOfChars_stem' : numOfCharacters_stem, 'pair' : words_times_pair,'pair_stem' : word_stem_times_pair})
 
 #method
 def countNumOfWords(contents):

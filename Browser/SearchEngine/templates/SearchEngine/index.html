@@ -24,7 +24,7 @@
         function draw(pairs, pairs_stem){
             var times = [];
             var labels = [];
-            for(var i = 0; i < pairs.length/100; i++){
+            for(var i = 0; i < pairs.length; i++){
                 labels.push(pairs[i][0]);
                 times.push(pairs[i][1]);
             }
@@ -54,7 +54,7 @@
             });
             var times_stem = [];
             var labels_stem = [];
-            for(var i = 0; i < pairs_stem.length/100; i++){
+            for(var i = 0; i < pairs_stem.length; i++){
                 labels_stem.push(pairs_stem[i][0]);
                 times_stem.push(pairs_stem[i][1]);
             }
@@ -168,6 +168,43 @@
             // btnStemming.style.color = "white";
         };
 
+        function openTweet_1(i){
+            var original = document.getElementById('tweet_text_'+i);
+            var original_statisitics = document.getElementById('tweet_statistics_'+i);
+            var stemming = document.getElementById('tweet_text_stem_'+i);
+            var stemming_statisitics = document.getElementById('tweet_stem_statistics_'+i);
+            var btnOrigin = document.getElementsByClassName('btnTweetOrigin_'+i)[0];
+            var btnStemming = document.getElementsByClassName('btnTweetStemming_'+i)[0];
+
+            original.style.display = 'block';
+            original_statisitics.style.display = 'block';
+            stemming.style.display = 'none';
+            stemming_statisitics.style.display = 'none';
+
+            btnOrigin.className = btnOrigin.className.replace(" active", "");
+            btnStemming.className = btnStemming.className.replace(" active", "");
+            btnOrigin.className += " active";
+
+        };
+
+        function openTweet_2(i){
+            var original = document.getElementById('tweet_text_'+i);
+            var original_statisitics = document.getElementById('tweet_statistics_'+i);
+            var stemming = document.getElementById('tweet_text_stem_'+i);
+            var stemming_statisitics = document.getElementById('tweet_stem_statistics_'+i);
+            var btnOrigin = document.getElementsByClassName('btnTweetOrigin_'+i)[0];
+            var btnStemming = document.getElementsByClassName('btnTweetStemming_'+i)[0];
+            original.style.display = 'none';
+            original_statisitics.style.display = 'none';
+            stemming.style.display = 'block';
+            stemming_statisitics.style.display = 'block';
+
+            btnOrigin.className = btnOrigin.className.replace(" active", "");
+            btnStemming.className = btnStemming.className.replace(" active", "");
+            btnStemming.className += " active";
+
+        }
+
         function changeZipf_1(){
             document.getElementById('canvas1').style.display='block';
             document.getElementById('canvas2').style.display='none';
@@ -257,7 +294,7 @@
                                 +'<div class=panel>'
                                     +'<div id=author>'+data['authors'][i]+'</div>'
                                     +'<div class="content_tab">'
-                                        +'<button onclick="openContent_1('+i+')"'+'class="btnContentOrigin_'+i+' defaultOpen">original</button>'
+                                        +'<button onclick="openContent_1('+i+')"'+'class="btnContentOrigin_'+i+' defaultOpen">Original</button>'
                                         +'<button onclick="openContent_2('+i+')" class="btnContentStemming_'+i+'">Stemming</button>'
                                     +'</div>'
                                     +'<div id="content_origin_'+i+'"'+' class=tabcontent>'
@@ -294,6 +331,7 @@
                 },
             
                 success:function(data){
+                    draw(data['pair'], data['pair_stem']);
                     document.getElementById('comm').style.display="none"
                     var numOfSearching = data['texts'].length;
                     $("#numOfSearching").text(numOfSearching);
@@ -308,13 +346,24 @@
                                     +'</tr>'
                                     +'<tr><td style="color:#6a7881">'+data['screen_names'][i]+'</td></tr>'
                                 +'</table>'
-                                +'<div id=text >'+data['texts'][i]+'</div>'
+                                +'<div class="content_tab">'
+                                        +'<button onclick="openTweet_1('+i+')"'+'class="btnTweetOrigin_'+i+' defaultOpen">Original</button>'
+                                        +'<button onclick="openTweet_2('+i+')" class="btnTweetStemming_'+i+'">Stemming</button>'
+                                +'</div>'
+                                +'<br><br><br>'
+                                +'<div class="twitter_text" id=tweet_text_'+i+'>'+data['texts'][i]+'</div>'
+                                +'<div class="twitter_text" id=tweet_text_stem_'+i+'>'+data['texts_stem'][i]+'</div>'
                                 +'<footer id=created_at>'+data['created_ats'][i]+'</footer>'
-                                +'<div style="text-align:right">Tweet字數 : '+data['numOfWords'][i]+" 字元數 : "+data['numOfChars'][i]+'</div>'
+                                +'<div style="text-align:right" id=tweet_statistics_'+i+'>Tweet字數 : '+data['numOfWords'][i]+" 字元數 : "+data['numOfChars'][i]+'</div>'
+                                +'<div style="text-align:right" id=tweet_stem_statistics_'+i+'>Tweet字數 : '+data['numOfWords_stem'][i]+" 字元數 : "+data['numOfChars_stem'][i]+'</div>'
                             +'</div><br>';
                     
                     }
-                    $('.bg').append(list)
+                    $('.bg').append(list);
+                    var defaultOpen =  document.getElementsByClassName("defaultOpen");
+                    for(var i = 0; i < defaultOpen.length; i++){
+                        defaultOpen[i].click();
+                    }
                 },
                 error:function(xhr){
                     alert('error');
@@ -426,7 +475,7 @@
             margin-left: 55px;
             text-align: justify;
         }
-        #text{
+        .twitter_text{
             position: relative;
             text-align: left;
             font-size: 30px;
