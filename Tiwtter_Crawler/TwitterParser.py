@@ -1,13 +1,19 @@
-import os
+import os, sys
 import json
 import re
+from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize
+sys.path.append('../Utils')
+from Utils.minEditDist import minEditDist
 class TwitterParser:
     index = dict()
+    ps = PorterStemmer()
+
     def __init__(self, fileContent):
         self.jsonFiles = json.loads(fileContent)
         self.createIndex(self.jsonFiles)
         self.sortIndex()
-        print(self.index)
+        # print(self.index)
     
     def createIndex(self, jsonFiles):
         num = 0
@@ -39,39 +45,90 @@ class TwitterParser:
             key = tag.split(' ')[1]
             string = string.replace(tag,'<a href=https://twitter.com/search?q=%23'+key+'&src=typd>'+tag+'</a>')
         return string
+        
+    def stemming(self, string):
+        words = word_tokenize(string)
+        result = list()
+        for word in words:
+            result.append(self.ps.stem(word))
+        return ' '.join(result)
 
+    def countAllWordsTime(self, union):
+        words_times_dict = dict()
+        words_stem_times_dict = dict()
+
+        for i in union:
+            text = self.jsonFiles[i]['text']
+            text_stem = self.stemming(text)
+            extract = re.findall(r'\w+', str(text))
+            extract_stem = re.findall(r'\w+', str(text_stem))
+            for word in extract:
+                word = word.lower()
+                count = words_times_dict.get(word, 0)
+                words_times_dict[word] = count + 1
+            for word in extract_stem:
+                word = word.lower()
+                count = words_stem_times_dict.get(word, 0)
+                words_stem_times_dict[word] = count + 1
+        return words_times_dict, words_stem_times_dict
     def match(self, query):
-        query_string = ''
-        for q in query.split(' '):
-            query_string += '(?<!(#\s))(?<!(%23))('+q+')|'
-        query_string = query_string[:-1]
         texts = list()
+        texts_stem = list()
         user_names = list()
         screen_names = list()
         created_ats = list()
         numOfCharacters = list()
+        numOfCharacters_stem = list()
         numOfWords = list()
+        numOfWords_stem = list()
         union = list()
 
+
+        query_string = ''
+        query_string_stem = ''
+        for q in query.split(' '):
+            query_string += '(?<!(#\s))(?<!(%23))('+q+')|'
+            query_string_stem += '(?<!(#\s))(?<!(%23))('+self.stemming(q)+')|'
+        query_string = query_string[:-1]
+        query_string_stem = query_string_stem[:-1]
+        print(query_string_stem)
+        print(query_string)
         for q in query.split(' '):
             try:
                 union = list(set(union) | set(self.index[q.lower()]))
             except KeyError as e:
                 print(e)
-        
+        words_times_dict, words_stem_times_dict = self.countAllWordsTime(union)
         for i in union:
             text = self.jsonFiles[i]['text']
-            print(text)
+            text_stem = self.stemming(text)
+            # print(text)
+            # print(text_stem)
+
             numOfWords.append(len(re.findall(r'\w+', text)))
+            numOfWords_stem.append(len(re.findall(r'\w+', text_stem)))
             numOfCharacters.append(len(re.findall(r'\S',text)))
+            numOfCharacters_stem.append(len(re.findall(r'\S', text_stem)))
+            
             iterTag = re.findall('(#[a-z\d-]+|# [a-z\d-]+)', text, re.IGNORECASE)
+            iterTag_stem = re.findall('(#[a-z\d-]+|# [a-z\d-]+)', text_stem, re.IGNORECASE)
             if(iterTag):
                 text = self.mark_hashtag(iterTag, text)
-            
+            if(iterTag_stem):
+                text_stem = self.mark_hashtag(iterTag_stem, text_stem)
+            # print(text_stem)
+
             iterText = re.finditer(query_string, text, re.IGNORECASE)
+            iterText_stem = re.finditer(query_string_stem, text_stem, re.IGNORECASE)
             position = [(m.start(), m.end()) for m in iterText]
+            position_stem = [(m.start(), m.end()) for m in iterText_stem]
             if(position):
                 texts.append(self.mark_content(position, text))
+                user_names.append(self.jsonFiles[i]['author_id'])
+                screen_names.append('@')
+                created_ats.append(self.jsonFiles[i]['formatted_date'].replace('+0000', ''))
+            if(position_stem):
+                texts_stem.append(self.mark_content(position_stem, text_stem))
                 user_names.append(self.jsonFiles[i]['author_id'])
                 screen_names.append('@')
                 created_ats.append(self.jsonFiles[i]['formatted_date'].replace('+0000', ''))
@@ -90,7 +147,7 @@ class TwitterParser:
         #             user_names.append(tweet['author_id'])
         #             screen_names.append('@')
         #             created_ats.append(tweet['formatted_date'].replace('+0000 ',''))
-        return texts, user_names, screen_names,created_ats, numOfWords, numOfCharacters
+        return texts, texts_stem, user_names, screen_names,created_ats, numOfWords, numOfWords_stem, numOfCharacters, numOfCharacters_stem
 
     class color:
         RED_START = '<font color=red>'  
