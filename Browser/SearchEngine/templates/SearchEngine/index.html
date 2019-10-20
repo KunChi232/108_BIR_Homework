@@ -199,8 +199,8 @@
             PubMedSearch(0);
         };
 
-        function changeSearchClick(){
-            var query = $('#changeSearch').text();
+        function correctSearchClick(){
+            var query = $('#correctSearch').text();
             document.getElementsByName('input')[0].value = query;
             PubMedSearch(0);
         };
@@ -209,7 +209,7 @@
             document.getElementById('searchResult').style.display = 'block'
 
             $('#currentSearch').text(after)
-            $('#changeSearch').text(before)
+            $('#correctSearch').text(before)
         };
 
         function intiPage(numOfSearching){
@@ -243,11 +243,11 @@
                     var numOfSearching = data['titles'].length;
                     var numOfComm = data['comm'].length;
                     intiPage(numOfSearching);
-                    if(document.getElementsByName('input')[0].value.split(" ").length > 1){
-                        display_comm(data, numOfComm);
-                    };
-                    if(data['edit'][0] == 1){
-                        changeKeyword(data['edit'][1], document.getElementsByName('input')[0].value)
+                    // if(document.getElementsByName('input')[0].value.split(" ").length > 1){
+                    //     display_comm(data, numOfComm);
+                    // };
+                    if(data['edit'][1] == 1){
+                        changeKeyword(data['edit'][0], document.getElementsByName('input')[0].value)
                     }
                     var list=''
                     for(var i=0;i<numOfSearching;i++){
@@ -608,7 +608,7 @@
             font-size: 18px;
             color: red;
         }
-        #changeSearch{
+        #correctSearch{
             background-color: transparent;
             border: none;
             cursor: pointer;
@@ -702,7 +702,7 @@
             <h3 id=comm style="display: none">同時擁有<var id=key>xxxx</var> <var id=numOfComm>XXX</var></h3>
             <div id="searchResult" style="display: none;">
                 <h3>目前顯示的是以下字詞的搜尋結果：<button id='currentSearch' onclick="currentSearchClick()"></button></h3>
-                <h4>您可以改回搜尋：<button id='changeSearch' onclick="changeSearchClick()"></button></h4>
+                <h4>您可以改回搜尋：<button id='correctSearch' onclick="correctSearchClick()"></button></h4>
             </div>
         </div>
         <div id=chart_div></div>

@@ -38,7 +38,6 @@ def PubMedSearch(request):
     if(request.method == 'GET'):
         query = request.GET['query']
         flag = request.GET['flag']
-        print(flag)
         titles, titles_stem, contents , contents_stem, authors, numOfWords, numOfWords_stem, numOfCharacters, numOfCharacters_stem, comm, words_times_pair, word_stem_times_pair, edit = pmp.match(query, flag)
         numOfSentence, numOfSentence_stem, contents, contents_stem= countNumOfSentence(contents,contents_stem)
         return JsonResponse({'titles' : titles, 'titles_stem' : titles_stem, 'contents' : contents, 'contents_stem' : contents_stem,'authors' : authors, 

@@ -146,14 +146,14 @@ class PubMedParser:
         union = list()
         edit = [0, query]
         if(cal_dist_flag == '1'):
-            temp, minDist= minEditDist(query, self.index)
-            print('Mini Edit Dist : {}'.format(minDist))
-            if(minDist == 0):
-                edit = [0, query]
-            elif(minDist > 0 and minDist < 5):
-                edit = [1, temp]
-                query = temp
-
+            temp, correct= minEditDist(query, self.index)
+            edit = [temp, correct]
+            query = temp
+            # if(minDist == 0):
+            #     edit = [correct, query]
+            # elif(minDist > 0 and minDist < 5):
+            #     edit = [correct, temp]
+            #     query = temp
         start_time = time.time()
         query = query.split(' ')
         query_string = ''
